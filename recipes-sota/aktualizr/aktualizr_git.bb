@@ -18,6 +18,7 @@ PR = "7"
 
 SRC_URI = " \
   gitsm://github.com/advancedtelematic/aktualizr;branch=${BRANCH} \
+  file://0001-Move-default-sota.toml-from-usr-lib-to-etc.patch \
   file://aktualizr.service \
   file://aktualizr-serialcan.service \
   "

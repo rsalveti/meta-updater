@@ -6,7 +6,7 @@ do_install_append() {
     AKTUALIZR_PARAMETERS_LEGACYSEC="--legacy-interface ${SOTA_LEGACY_SECONDARY_INTERFACE}";
   fi
 
-  AKTUALIZR_PARAMETERS_CONFIGFILE="--config /usr/lib/sota/sota.toml"
+  AKTUALIZR_PARAMETERS_CONFIGFILE="--config ${localstatedir}/sota/sota.toml"
   for sec in ${SOTA_VIRTUAL_SECONDARIES}; do
     AKTUALIZR_PARAMETERS_VIRTUALSECS="${AKTUALIZR_PARAMETERS_VIRTUALSECS} --secondary-config $sec"
   done

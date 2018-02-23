@@ -32,10 +32,9 @@ do_install() {
         bbwarn "OSTREE_PUSH_CREDENTIALS is ignored. Please use SOTA_PACKED_CREDENTIALS"
     fi
 
-    install -d ${D}${libdir}/sota
     install -d ${D}${localstatedir}/sota
     if [ -n "${SOTA_PACKED_CREDENTIALS}" ]; then
-        install -m 0644 ${STAGING_DIR_NATIVE}${libdir}/sota/sota_autoprov.toml ${D}${libdir}/sota/sota.toml
+        install -m 0644 ${STAGING_DIR_NATIVE}${libdir}/sota/sota_autoprov.toml ${D}${localstatedir}/sota/sota.toml
 
         # deploy SOTA credentials
         if [ -e ${SOTA_PACKED_CREDENTIALS} ]; then
@@ -47,8 +46,8 @@ do_install() {
 }
 
 FILES_${PN} = " \
-                ${libdir}/sota/sota.toml \
                 ${localstatedir}/sota \
+                ${localstatedir}/sota/sota.toml \
                 ${localstatedir}/sota/sota_provisioning_credentials.zip \
                 "
 
