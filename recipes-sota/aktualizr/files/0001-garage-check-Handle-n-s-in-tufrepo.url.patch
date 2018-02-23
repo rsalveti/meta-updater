@@ -1,0 +1,38 @@
+From c9a140222e7e16aadb09bfbb49f5fdc33595730f Mon Sep 17 00:00:00 2001
+From: Andy Doan <andy@opensourcefoundries.com>
+Date: Wed, 21 Feb 2018 23:44:13 -0600
+Subject: [PATCH] garage-check: Handle \n's in tufrepo.url
+
+The tufrepo.url file in my credentials.zip somehow had a trailing \n
+making my bitbake's call to garage-check very difficult to debug.
+
+Signed-off-by: Andy Doan <andy@opensourcefoundries.com>
+---
+ src/sota_tools/treehub_server.cc | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/sota_tools/treehub_server.cc b/src/sota_tools/treehub_server.cc
+index 6852a06..4de1f06 100644
+--- a/src/sota_tools/treehub_server.cc
++++ b/src/sota_tools/treehub_server.cc
+@@ -1,6 +1,8 @@
+ #include <assert.h>
+ #include <iostream>
+ 
++#include <boost/algorithm/string.hpp>
++
+ #include "treehub_server.h"
+ #include "utils.h"
+ 
+@@ -41,6 +43,8 @@ void TreehubServer::InjectIntoCurl(const string& url_suffix, CURL* curl_handle,
+   else if (*url.rbegin() == '/' && *url_suffix.begin() == '/')
+     url.erase(url.length() - 1);
+ 
++  boost::trim_if(url, boost::is_any_of(" \t\r\n"));
++
+   curl_easy_setopt(curl_handle, CURLOPT_URL, (url + url_suffix).c_str());
+ 
+   curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, &auth_header_);
+-- 
+2.16.1
+
