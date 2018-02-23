@@ -13,7 +13,6 @@ SRC_URI = " \
   file://LICENSE \
   "
 
-require environment.inc
 require credentials.inc
 
 export SOTA_PACKED_CREDENTIALS

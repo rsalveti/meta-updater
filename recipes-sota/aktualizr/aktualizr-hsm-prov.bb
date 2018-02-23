@@ -14,7 +14,6 @@ SRC_URI = " \
 PV = "1.0"
 PR = "6"
 
-require environment.inc
 require credentials.inc
 
 do_install() {

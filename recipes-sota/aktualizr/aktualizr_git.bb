@@ -39,6 +39,9 @@ EXTRA_OECMAKE = "-DWARNING_AS_ERROR=OFF -DCMAKE_BUILD_TYPE=Release -DAKTUALIZR_V
 EXTRA_OECMAKE_append_class-target = " -DBUILD_OSTREE=ON -DBUILD_ISOTP=ON ${@bb.utils.contains('SOTA_CLIENT_FEATURES', 'hsm', '-DBUILD_P11=ON', '', d)} "
 EXTRA_OECMAKE_append_class-native = " -DBUILD_SOTA_TOOLS=ON -DBUILD_OSTREE=OFF "
 
+export SOTA_LEGACY_SECONDARY_INTERFACE
+export SOTA_VIRTUAL_SECONDARIES
+
 do_install_append () {
     rm -f ${D}${bindir}/aktualizr_cert_provider
     rm -fr ${D}${libdir}/systemd
@@ -56,6 +59,19 @@ do_install_append_class-target () {
     install -d ${D}${systemd_unitdir}/system
     aktualizr_service=${@bb.utils.contains('SOTA_CLIENT_FEATURES', 'serialcan', '${WORKDIR}/aktualizr-serialcan.service', '${WORKDIR}/aktualizr.service', d)}
     install -m 0644 ${aktualizr_service} ${D}${systemd_unitdir}/system/aktualizr.service
+
+    # Create default environment config file
+    if [ -n "${SOTA_LEGACY_SECONDARY_INTERFACE}" ]; then
+        AKTUALIZR_PARAMETERS_LEGACYSEC="--legacy-interface ${SOTA_LEGACY_SECONDARY_INTERFACE}";
+    fi
+
+    AKTUALIZR_PARAMETERS_CONFIGFILE="--config ${localstatedir}/sota/sota.toml"
+    for sec in ${SOTA_VIRTUAL_SECONDARIES}; do
+        AKTUALIZR_PARAMETERS_VIRTUALSECS="${AKTUALIZR_PARAMETERS_VIRTUALSECS} --secondary-config $sec"
+    done
+
+    install -d ${D}${sysconfdir}/sota
+    echo "AKTUALIZR_CMDLINE_PARAMETERS=${AKTUALIZR_PARAMETERS_CONFIGFILE} ${AKTUALIZR_PARAMETERS_LEGACYSEC} ${AKTUALIZR_PARAMETERS_VIRTUALSECS}" > ${D}${sysconfdir}/sota/sota.env
 }
 do_install_append_class-native () {
     rm -f ${D}${bindir}/aktualizr
@@ -69,6 +85,7 @@ do_install_append_class-native () {
 FILES_${PN}_class-target = " \
                 ${bindir}/aktualizr \
                 ${bindir}/aktualizr-info \
+                ${sysconfdir}/sota/sota.env \
                 ${systemd_unitdir}/system/aktualizr.service \
                 ${libdir}/sota/schemas \
                 "
