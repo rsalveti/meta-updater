@@ -3,6 +3,8 @@
 do_image_ostree[depends] += "ostree-native:do_populate_sysroot \
                         openssl-native:do_populate_sysroot \
                         coreutils-native:do_populate_sysroot \
+                        jq-native:do_populate_sysroot \
+                        perl-native:do_populate_sysroot \
                         unzip-native:do_populate_sysroot \
                         virtual/kernel:do_deploy \
                         ${OSTREE_INITRAMFS_IMAGE}:do_image_complete"
@@ -225,8 +227,23 @@ IMAGE_CMD_garagesign () {
                                      --home-dir ${GARAGE_SIGN_REPO} \
                                      --key-name=targets
             errcode=0
-            garage-sign targets push --repo tufrepo \
-                                     --home-dir ${GARAGE_SIGN_REPO} || errcode=$?
+            treehub=$(unzip -p ${SOTA_PACKED_CREDENTIALS} treehub.json | ${STAGING_BINDIR_NATIVE}/perl-native/json_pp)
+            if echo "$treehub" | jq --exit-status .basic_auth >/dev/null ; then
+                bbwarn "garage-sign does not support HTTP Basic, using wget"
+                user=$(echo $treehub | jq -r .basic_auth.user)
+                pass=$(echo $treehub | jq -r .basic_auth.password)
+                url=$(unzip -p ${SOTA_PACKED_CREDENTIALS} tufrepo.url | tr -d ' \t\n\r\f')
+                bbnote "pushing with username $user to $url"
+                wget --method PUT \
+                      --http-user $user --http-password $pass \
+                      --header "Content-type: application/json" \
+                      --header "X-Ats-Role-Checksum: $(cat ${GARAGE_SIGN_REPO}/tufrepo/roles/targets.json.checksum)" \
+                      --body-file ${GARAGE_SIGN_REPO}/tufrepo/roles/targets.json \
+                      $url/api/v1/user_repo/targets || errcode=$?
+            else
+                garage-sign targets push --repo tufrepo \
+                                         --home-dir ${GARAGE_SIGN_REPO} || errcode=$?
+            fi
             if [ "$errcode" -eq "0" ]; then
                 push_success=1
                 break
